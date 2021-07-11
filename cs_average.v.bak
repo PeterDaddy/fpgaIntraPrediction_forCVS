@@ -1,0 +1,51 @@
+`include "cs_constants.v"
+
+module cs_average
+(
+	input							 rst,
+	input							 clk,
+	input	 [`PACKET_LEN-1:0] y_in,
+	input	 [`ADDR_WIDTH-1:0] addr,
+	input  [`DATA_WIDTH-1:0] y_0,
+	input  [`DATA_WIDTH-1:0] y_1,
+	input  [`DATA_WIDTH-1:0] y_31,
+	
+	output reg [`DATA_WIDTH-1:0] y_p_left_out_0,
+	output reg [`DATA_WIDTH-1:0] y_p_up_out_0,
+	output reg [`DATA_WIDTH-1:0] y_p_dc_out_0,
+	output reg [`DATA_WIDTH-1:0] y_p_left_out,
+	output reg [`DATA_WIDTH-1:0] y_p_up_out,
+	output reg [`DATA_WIDTH-1:0] y_p_dc_out
+);
+integer INDEX;
+reg [`DATA_WIDTH-1:0] memory [0:80-1];
+reg [`DATA_WIDTH-1:0] tmp_y_p_left_out_0;
+reg [`DATA_WIDTH-1:0] tmp_y_p_left_out;
+reg [`DATA_WIDTH-1:0] tmp_y_p_dc_out_0;
+reg [`DATA_WIDTH-1:0] tmp_y_p_dc_out;
+
+always@(posedge clk or negedge rst) begin
+	if(~rst) begin
+		for(INDEX=0;INDEX<=80-1;INDEX=INDEX+1) begin
+			memory[INDEX]  <= 0;
+		end
+		y_p_left_out_0 	<= 0;
+		y_p_left_out		<= 0;
+		y_p_dc_out_0		<= 0;
+		y_p_dc_out			<= 0;
+		y_p_up_out_0		<= 0;
+		y_p_up_out     	<= 0;
+	end
+	else begin
+		y_p_left_out_0 	<= ((y_0 - y_31) >> 4'b0111) << 4'b1000;
+		y_p_left_out	 	<= ((y_0 - y_31) >> 4'b0111) << 4'b0111;
+		y_p_dc_out_0	 	<= (y_0 >> 4'b1000) << 4'b1000;
+		y_p_dc_out		 	<= (y_0 >> 4'b1000) << 4'b0111;
+		memory[addr] 		<= y_0 - y_1;
+		y_p_up_out_0		<= (memory[addr] >> 4'b0111) << 4'b1000;
+		y_p_up_out     	<= (memory[addr] >> 4'b0111) << 4'b0111;
+	end
+end
+
+endmodule
+
